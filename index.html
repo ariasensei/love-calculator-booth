@@ -1,0 +1,775 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Love Calculator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&amp;family=Quicksand:wght@400;500;600;700&amp;family=Dancing+Script:wght@400;700&amp;display=swap" rel="stylesheet">
+  <style>
+    body {
+      box-sizing: border-box;
+      font-family: 'Quicksand', sans-serif;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-12px) rotate(5deg); }
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 20px rgba(255, 107, 129, 0.3); }
+      50% { box-shadow: 0 0 40px rgba(255, 107, 129, 0.6); }
+    }
+
+    @keyframes heart-beat {
+      0%, 100% { transform: scale(1); }
+      15% { transform: scale(1.15); }
+      30% { transform: scale(1); }
+      45% { transform: scale(1.1); }
+    }
+
+    @keyframes slide-up {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes confetti-fall {
+      0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(100px) rotate(720deg); opacity: 0; }
+    }
+
+    @keyframes percentage-fill {
+      from { width: 0%; }
+    }
+
+    .float-anim { animation: float 3s ease-in-out infinite; }
+    .pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+    .heart-beat { animation: heart-beat 1.2s ease-in-out infinite; }
+    .slide-up { animation: slide-up 0.6s ease-out forwards; }
+
+    .slide-up-delay-1 { animation-delay: 0.1s; opacity: 0; }
+    .slide-up-delay-2 { animation-delay: 0.2s; opacity: 0; }
+    .slide-up-delay-3 { animation-delay: 0.3s; opacity: 0; }
+    .slide-up-delay-4 { animation-delay: 0.4s; opacity: 0; }
+    .slide-up-delay-5 { animation-delay: 0.5s; opacity: 0; }
+
+    .confetti-piece {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      animation: confetti-fall 2s ease-in forwards;
+    }
+
+    .percentage-bar {
+      animation: percentage-fill 1.5s ease-out forwards;
+    }
+
+    /* Certificate Print Styles */
+    .certificate-wrapper {
+      background: linear-gradient(135deg, #fff5f7 0%, #fff0f3 50%, #ffe8ec 100%);
+      border: 3px solid #e8849a;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .certificate-wrapper::before {
+      content: '';
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      right: 8px;
+      bottom: 8px;
+      border: 1.5px solid #f0a0b4;
+      border-radius: 4px;
+      pointer-events: none;
+    }
+
+    .certificate-corner {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+    }
+
+    .certificate-corner svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .corner-tl { top: 12px; left: 12px; }
+    .corner-tr { top: 12px; right: 12px; transform: scaleX(-1); }
+    .corner-bl { bottom: 12px; left: 12px; transform: scaleY(-1); }
+    .corner-br { bottom: 12px; right: 12px; transform: scale(-1, -1); }
+
+    @media print {
+      body * { visibility: hidden; }
+      #certificate-section, #certificate-section * { visibility: visible; }
+      #certificate-section {
+        position: absolute;
+        left: 0; top: 0;
+        width: 297mm;
+        height: 210mm;
+      }
+    }
+
+    .input-love {
+      background: rgba(255, 255, 255, 0.15);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+      color: #fff;
+    }
+
+    .input-love::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .input-love:focus {
+      border-color: #ff6b81;
+      box-shadow: 0 0 20px rgba(255, 107, 129, 0.3);
+      outline: none;
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-love {
+      background: linear-gradient(135deg, #ff6b81, #ff4757);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-love:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(255, 71, 87, 0.4);
+    }
+
+    .btn-love:active {
+      transform: translateY(0);
+    }
+
+    .btn-love::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+      transform: rotate(45deg);
+      transition: all 0.5s;
+    }
+
+    .btn-love:hover::after {
+      left: 100%;
+    }
+
+    .result-card {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(12px);
+    }
+
+    .bg-love-gradient {
+      background: linear-gradient(135deg, #1a0011 0%, #2d0a1e 25%, #3d1233 50%, #2a0e20 75%, #1a0011 100%);
+    }
+
+    .text-love-pink { color: #ff6b81; }
+    .text-love-gold { color: #ffd700; }
+    .text-love-light { color: #ffeef0; }
+
+    .scrollable-content {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 107, 129, 0.5) transparent;
+    }
+    .scrollable-content::-webkit-scrollbar { width: 6px; }
+    .scrollable-content::-webkit-scrollbar-track { background: transparent; }
+    .scrollable-content::-webkit-scrollbar-thumb { background: rgba(255, 107, 129, 0.5); border-radius: 3px; }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full m-0 p-0">
+  <div id="app-wrapper" class="bg-love-gradient h-full w-full overflow-auto scrollable-content"><!-- Floating Hearts Background -->
+   <div id="floating-hearts" class="fixed inset-0 pointer-events-none overflow-hidden" style="z-index:0;"></div><!-- Main Content -->
+   <main class="relative w-full" style="z-index:1;"><!-- INPUT SCREEN -->
+    <div id="input-screen" class="flex items-center justify-center w-full" style="min-height: 100%;">
+     <div class="w-full max-w-lg mx-auto px-6 py-10"><!-- Logo Heart -->
+      <div class="text-center mb-6">
+       <div class="inline-block heart-beat">
+        <svg width="70" height="65" viewbox="0 0 70 65" fill="none"><path d="M35 60 C35 60 5 40 5 20 C5 10 13 2 23 2 C29 2 33 6 35 10 C37 6 41 2 47 2 C57 2 65 10 65 20 C65 40 35 60 35 60Z" fill="#ff4757" stroke="#ff6b81" stroke-width="1.5" /> <path d="M20 15 C22 10 28 8 32 12" stroke="rgba(255,255,255,0.4)" stroke-width="2" stroke-linecap="round" fill="none" />
+        </svg>
+       </div>
+      </div>
+      <h1 id="main-title" class="text-center text-3xl md:text-4xl font-bold text-white mb-1" style="font-family: 'Playfair Display', serif;">Love Calculator</h1>
+      <p id="subtitle-text" class="text-center text-love-pink text-sm mb-8 tracking-widest uppercase">College Fair Edition</p>
+      <form id="love-form" class="space-y-5">
+       <div><label for="name1" class="block text-love-light text-sm font-semibold mb-2 tracking-wide">💕 Person 1 Name</label> <input type="text" id="name1" placeholder="Enter first name..." class="input-love w-full px-5 py-3 rounded-xl text-base" required autocomplete="off">
+       </div>
+       <div><label for="name2" class="block text-love-light text-sm font-semibold mb-2 tracking-wide">💕 Person 2 Name</label> <input type="text" id="name2" placeholder="Enter second name..." class="input-love w-full px-5 py-3 rounded-xl text-base" required autocomplete="off">
+       </div><button type="submit" class="btn-love w-full py-4 rounded-xl text-white font-bold text-lg tracking-wide mt-4"> 💘 Calculate Love 💘 </button>
+      </form>
+      <p class="text-center text-xs mt-6" style="color: rgba(255,255,255,0.35);">No hearts were broken in the making of this calculator. • For entertainment only 💫</p>
+     </div>
+    </div><!-- RESULTS SCREEN -->
+    <div id="results-screen" class="hidden w-full">
+     <div class="w-full max-w-2xl mx-auto px-5 py-8"><!-- Back Button --> <button id="back-btn" class="mb-6 text-love-pink hover:text-white transition-colors text-sm font-semibold flex items-center gap-2">
+       <svg width="16" height="16" viewbox="0 0 16 16" fill="currentColor">
+        <path d="M10 13l-5-5 5-5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" />
+       </svg> Try Another Pair </button> <!-- Names Header -->
+      <div class="text-center mb-6 slide-up">
+       <p class="text-love-pink text-sm tracking-widest uppercase mb-2">Love Reading For</p>
+       <h2 id="result-names" class="text-2xl md:text-3xl font-bold text-white" style="font-family: 'Dancing Script', cursive;"></h2>
+      </div><!-- Love Percentage -->
+      <div class="result-card rounded-2xl p-6 mb-5 slide-up slide-up-delay-1">
+       <div class="flex items-center gap-3 mb-3"><span class="text-2xl">💗</span>
+        <h3 class="text-love-gold font-bold text-lg" style="font-family: 'Playfair Display', serif;">Love Compatibility</h3>
+       </div>
+       <div class="flex items-end gap-3 mb-3"><span id="love-percent" class="text-5xl font-bold text-white" style="font-family: 'Playfair Display', serif;"></span> <span class="text-love-pink text-xl mb-2">%</span>
+       </div>
+       <div class="w-full h-3 rounded-full overflow-hidden mb-3" style="background: rgba(255,255,255,0.1);">
+        <div id="percent-bar" class="h-full rounded-full percentage-bar" style="background: linear-gradient(90deg, #ff4757, #ff6b81, #ffd700);"></div>
+       </div>
+       <p id="percent-explanation" class="text-love-light text-sm leading-relaxed"></p>
+      </div><!-- FLAMES Result -->
+      <div class="result-card rounded-2xl p-6 mb-5 slide-up slide-up-delay-2">
+       <div class="flex items-center gap-3 mb-3"><span class="text-2xl">🔥</span>
+        <h3 class="text-love-gold font-bold text-lg" style="font-family: 'Playfair Display', serif;">FLAMES Result</h3>
+       </div>
+       <p id="flames-result" class="text-2xl font-bold text-white mb-2" style="font-family: 'Dancing Script', cursive;"></p>
+       <p id="flames-desc" class="text-love-light text-sm leading-relaxed"></p>
+      </div><!-- MASH Result -->
+      <div class="result-card rounded-2xl p-6 mb-5 slide-up slide-up-delay-3">
+       <div class="flex items-center gap-3 mb-4"><span class="text-2xl">🏠</span>
+        <h3 class="text-love-gold font-bold text-lg" style="font-family: 'Playfair Display', serif;">MASH Future</h3>
+       </div>
+       <div class="grid grid-cols-2 gap-3">
+        <div class="rounded-xl p-3" style="background: rgba(255,215,0,0.08); border: 1px solid rgba(255,215,0,0.15);">
+         <p class="text-love-pink text-xs font-semibold uppercase tracking-wider mb-1">🏡 Home</p>
+         <p id="mash-home" class="text-white font-bold text-sm"></p>
+        </div>
+        <div class="rounded-xl p-3" style="background: rgba(255,107,129,0.08); border: 1px solid rgba(255,107,129,0.15);">
+         <p class="text-love-pink text-xs font-semibold uppercase tracking-wider mb-1">💼 Job</p>
+         <p id="mash-job" class="text-white font-bold text-sm"></p>
+        </div>
+        <div class="rounded-xl p-3" style="background: rgba(255,215,0,0.08); border: 1px solid rgba(255,215,0,0.15);">
+         <p class="text-love-pink text-xs font-semibold uppercase tracking-wider mb-1">🚗 Ride</p>
+         <p id="mash-transport" class="text-white font-bold text-sm"></p>
+        </div>
+        <div class="rounded-xl p-3" style="background: rgba(255,107,129,0.08); border: 1px solid rgba(255,107,129,0.15);">
+         <p class="text-love-pink text-xs font-semibold uppercase tracking-wider mb-1">🐾 Pet</p>
+         <p id="mash-pet" class="text-white font-bold text-sm"></p>
+        </div>
+       </div>
+      </div><!-- Love Reading -->
+      <div class="result-card rounded-2xl p-6 mb-5 slide-up slide-up-delay-4">
+       <div class="flex items-center gap-3 mb-3"><span class="text-2xl">📜</span>
+        <h3 class="text-love-gold font-bold text-lg" style="font-family: 'Playfair Display', serif;">Final Love Reading</h3>
+       </div>
+       <p id="love-reading" class="text-love-light text-sm leading-relaxed" style="font-family: 'Quicksand', sans-serif;"></p>
+      </div><!-- Actions -->
+      <div class="flex gap-3 mb-6 slide-up slide-up-delay-5"><button id="print-btn" class="btn-love flex-1 py-3 rounded-xl text-white font-bold text-sm"> 🖨️ Print Certificate </button> <button id="new-calc-btn" class="flex-1 py-3 rounded-xl text-white font-bold text-sm" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);"> 💕 New Calculation </button>
+      </div>
+     </div>
+    </div><!-- CERTIFICATE (for printing) - Landscape A4 -->
+    <div id="certificate-section" class="w-full" style="display: none; background: rgba(255,255,255,0.05); padding: 20px;">
+     <div id="certificate-printable" class="certificate-wrapper mx-auto" style="width: 1050px; height: 595px; max-width: 95vw; padding: 40px 50px; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.4);"><!-- Decorative Corners -->
+      <div class="certificate-corner corner-tl">
+       <svg viewbox="0 0 50 50">
+        <path d="M5 50 C5 25 25 5 50 5" stroke="#e8849a" stroke-width="2" fill="none" /><path d="M12 50 C12 30 30 12 50 12" stroke="#f0a0b4" stroke-width="1" fill="none" /><circle cx="8" cy="8" r="3" fill="#ff6b81" opacity="0.5" />
+       </svg>
+      </div>
+      <div class="certificate-corner corner-tr">
+       <svg viewbox="0 0 50 50">
+        <path d="M5 50 C5 25 25 5 50 5" stroke="#e8849a" stroke-width="2" fill="none" /><path d="M12 50 C12 30 30 12 50 12" stroke="#f0a0b4" stroke-width="1" fill="none" /><circle cx="8" cy="8" r="3" fill="#ff6b81" opacity="0.5" />
+       </svg>
+      </div>
+      <div class="certificate-corner corner-bl">
+       <svg viewbox="0 0 50 50">
+        <path d="M5 50 C5 25 25 5 50 5" stroke="#e8849a" stroke-width="2" fill="none" /><path d="M12 50 C12 30 30 12 50 12" stroke="#f0a0b4" stroke-width="1" fill="none" /><circle cx="8" cy="8" r="3" fill="#ff6b81" opacity="0.5" />
+       </svg>
+      </div>
+      <div class="certificate-corner corner-br">
+       <svg viewbox="0 0 50 50">
+        <path d="M5 50 C5 25 25 5 50 5" stroke="#e8849a" stroke-width="2" fill="none" /><path d="M12 50 C12 30 30 12 50 12" stroke="#f0a0b4" stroke-width="1" fill="none" /><circle cx="8" cy="8" r="3" fill="#ff6b81" opacity="0.5" />
+       </svg>
+      </div><!-- Certificate Content -->
+      <div class="text-center h-full flex flex-col justify-between"><!-- Top Section -->
+       <div><!-- Heart Icon -->
+        <div class="mb-2">
+         <svg width="40" height="38" viewbox="0 0 70 65" style="display:inline-block;"><path d="M35 58 C35 58 7 40 7 21 C7 11 14 4 23 4 C29 4 33 7 35 11 C37 7 41 4 47 4 C56 4 63 11 63 21 C63 40 35 58 35 58Z" fill="#ff4757" />
+         </svg>
+        </div>
+        <h1 class="text-3xl font-bold mb-1" style="font-family: 'Playfair Display', serif; color: #8b2252;">Official Love Compatibility Certificate</h1>
+        <div class="w-48 h-0.5 mx-auto mb-4" style="background: linear-gradient(90deg, transparent, #e8849a, transparent);"></div>
+        <p class="text-sm mb-1" style="color: #9e5070; font-family: 'Quicksand', sans-serif;">This certifies that</p>
+        <p id="cert-names" class="text-3xl font-bold mb-1" style="font-family: 'Dancing Script', cursive; color: #c0325e;"></p>
+        <p class="text-sm mb-4" style="color: #9e5070;">have been officially evaluated by LoveLogic AI</p>
+       </div><!-- Middle Section - Results -->
+       <div class="flex justify-center gap-6 mb-3"><!-- Love % -->
+        <div class="rounded-xl px-6 py-3 text-center" style="background: rgba(255,107,129,0.08); border: 1px solid rgba(200,80,110,0.2); min-width: 140px;">
+         <p class="text-xs font-semibold uppercase tracking-wider mb-1" style="color: #c0325e;">Love Score</p>
+         <p id="cert-percent" class="text-4xl font-bold" style="font-family: 'Playfair Display', serif; color: #8b2252;"></p>
+        </div><!-- FLAMES -->
+        <div class="rounded-xl px-6 py-3 text-center" style="background: rgba(255,215,0,0.06); border: 1px solid rgba(200,170,50,0.2); min-width: 140px;">
+         <p class="text-xs font-semibold uppercase tracking-wider mb-1" style="color: #c0325e;">FLAMES Result</p>
+         <p id="cert-flames" class="text-2xl font-bold" style="font-family: 'Dancing Script', cursive; color: #8b2252;"></p>
+        </div><!-- MASH -->
+        <div class="rounded-xl px-6 py-3 text-center" style="background: rgba(255,107,129,0.08); border: 1px solid rgba(200,80,110,0.2); min-width: 200px;">
+         <p class="text-xs font-semibold uppercase tracking-wider mb-1" style="color: #c0325e;">MASH Future</p>
+         <p id="cert-mash" class="text-sm font-semibold leading-relaxed" style="color: #8b2252;"></p>
+        </div>
+       </div><!-- Love Reading -->
+       <div class="mx-auto rounded-xl px-8 py-3 mb-3" style="background: rgba(139,34,82,0.04); border: 1px solid rgba(200,80,110,0.15); max-width: 85%;">
+        <p class="text-xs font-semibold uppercase tracking-wider mb-1" style="color: #c0325e;">✨ Love Reading ✨</p>
+        <p id="cert-reading" class="text-xs leading-relaxed" style="color: #6b3a50; font-family: 'Quicksand', sans-serif;"></p>
+       </div><!-- Bottom Section -->
+       <div>
+        <div class="w-48 h-0.5 mx-auto mb-3" style="background: linear-gradient(90deg, transparent, #e8849a, transparent);"></div>
+        <p class="text-xs font-semibold mb-3" style="color: #9e5070;"><span id="cert-footer-org">Certified by BSIS LoveLogic AI</span> – <span id="cert-footer-event">Lyceum De San Pablo College Fair Edition 2026</span></p>
+        <p class="text-xs" style="color: #9e5070;">Generated on <span id="cert-generated-date"></span></p>
+        <div class="flex justify-center gap-16 items-end">
+         <div class="text-center">
+          <div class="w-40 mb-1" style="border-bottom: 1.5px solid #c0325e;"></div>
+          <p id="cert-date" class="text-xs font-semibold" style="color: #8b2252;">February 9, 2026</p>
+          <p class="text-xs" style="color: #9e5070;">Date</p>
+         </div>
+         <div class="text-center">
+          <p class="text-lg mb-0" style="font-family: 'Dancing Script', cursive; color: #c0325e;">Dr. Cupid</p>
+          <div class="w-40 mb-1" style="border-bottom: 1.5px solid #c0325e;"></div>
+          <p class="text-xs font-semibold" style="color: #8b2252;">Dr. Cupid, PhD (Love Science)</p>
+          <p class="text-xs" style="color: #9e5070;">Signature</p>
+         </div>
+        </div>
+       </div>
+      </div>
+     </div>
+    </div>
+   </main>
+  </div>
+  <script>
+    // ============= CONFIG & DEFAULTS =============
+    const defaultConfig = {
+      background_color: '#1a0011',
+      surface_color: '#ff6b81',
+      text_color: '#ffeef0',
+      primary_action_color: '#ff4757',
+      secondary_action_color: '#ffd700',
+      font_family: 'Quicksand',
+      font_size: 16,
+      main_title: 'Love Calculator',
+      subtitle_text: 'College Fair Edition',
+      footer_org: 'BSIS LoveLogic AI',
+      footer_event: 'Lyceum De San Pablo College Fair Edition',
+      certificate_date: 'February 9, 2026'
+    };
+
+    // ============= LOVE CALCULATION DATA =============
+    const percentExplanations = [
+      (n1, n2) => `The stars say ${n1} and ${n2} are practically sharing a Netflix password already. That's basically marriage in college terms! 🍿`,
+      (n1, n2) => `${n1} and ${n2} have the kind of chemistry that makes lab partners jealous. Proceed with caution: extreme cuteness ahead! 🧪`,
+      (n1, n2) => `Our AI scanned the love frequencies and WOW — ${n1} and ${n2} are on the same wavelength. Even Wi-Fi can't connect this fast! 📡`,
+      (n1, n2) => `If love were a GPA, ${n1} and ${n2} would be on the Dean's List. Top-tier compatibility detected! 🎓`,
+      (n1, n2) => `${n1} and ${n2} have a vibe so strong, even the campus café barista ships them. Main character energy for sure! ☕`,
+      (n1, n2) => `The algorithm crunched the numbers and decided ${n1} and ${n2} should probably just hold hands already. Science says so! 🔬`,
+      (n1, n2) => `${n1} + ${n2} = the kind of couple that makes everyone else feel single at a college party. Sorry not sorry! 🎉`,
+      (n1, n2) => `Our love sensors detected a gravitational pull between ${n1} and ${n2} stronger than the pull of free food at a college event! 🍕`
+    ];
+
+    const flamesData = {
+      F: {
+        label: '🤝 Friends',
+        descs: [
+          (n1, n2) => `${n1} and ${n2} are the kind of friends who finish each other's sentences AND share fries without counting. That's real love, honestly.`,
+          (n1, n2) => `Best friend energy is off the charts! ${n1} and ${n2} are the duo everyone wants in their group project. Friendship goals, for real! ✨`
+        ]
+      },
+      L: {
+        label: '💕 Lovers',
+        descs: [
+          (n1, n2) => `Cupid didn't just shoot one arrow — he emptied the whole quiver! ${n1} and ${n2} are giving major love story energy. Get a playlist ready! 🎵`,
+          (n1, n2) => `The love vibes between ${n1} and ${n2} are so strong, even rom-com directors are taking notes. This is the real deal! 🎬`
+        ]
+      },
+      A: {
+        label: '✨ Attraction',
+        descs: [
+          (n1, n2) => `There's a magnetic pull between ${n1} and ${n2} that even physics can't explain. The attraction is undeniable — embrace the butterflies! 🦋`,
+          (n1, n2) => `${n1} and ${n2} have that "can't stop staring across the cafeteria" energy. The attraction is real, folks! 👀`
+        ]
+      },
+      M: {
+        label: '💍 Marriage',
+        descs: [
+          (n1, n2) => `Start planning the wedding, because FLAMES says ${n1} and ${n2} are headed to the altar! Don't forget to invite the whole campus! 🎂`,
+          (n1, n2) => `The AI has spoken: ${n1} and ${n2} have "happily ever after" written all over them. Someone call the wedding planner! 💒`
+        ]
+      },
+      E: {
+        label: '⚡ Enemies (But Make It Spicy)',
+        descs: [
+          (n1, n2) => `Plot twist! ${n1} and ${n2} got the "enemies" result, but we ALL know enemies-to-lovers is the BEST trope. Stay tuned for the sequel! 📖`,
+          (n1, n2) => `${n1} and ${n2} are giving enemies-to-lovers energy and honestly? That's the most iconic love story arc. The tension is *chef's kiss*! 💋`
+        ]
+      },
+      S: {
+        label: '🌟 Soulmates',
+        descs: [
+          (n1, n2) => `SOULMATES! The universe literally conspired to bring ${n1} and ${n2} together. This is written in the stars, the code, AND the syllabus! ⭐`,
+          (n1, n2) => `${n1} and ${n2} are cosmic soulmates! The kind of connection that spans multiple lifetimes, group chats, and cramming sessions! 🌙`
+        ]
+      }
+    };
+
+    const mashOptions = {
+      home: ['Mansion 🏰', 'Apartment 🏢', 'Cozy House 🏡', 'Beach Shack 🏖️'],
+      job: ['CEO 💼', 'Influencer 📱', 'Artist 🎨', 'Broke but Happy 😄'],
+      transport: ['Sports Car 🏎️', 'Motorcycle 🏍️', 'Cute Jeep 🚙', 'Walking Together 🚶‍♂️🚶‍♀️'],
+      pet: ['Golden Retriever 🐕', 'Fluffy Cat 🐈', 'None (Too Busy Loving) 💕', 'Too Many Cats 🐱🐱🐱']
+    };
+
+    // ============= CALCULATION FUNCTIONS =============
+    function calculateFLAMES(name1, name2) {
+      const n1 = name1.toLowerCase().replace(/[^a-z]/g, '');
+      const n2 = name2.toLowerCase().replace(/[^a-z]/g, '');
+      let arr1 = n1.split('');
+      let arr2 = n2.split('');
+
+      for (let i = arr1.length - 1; i >= 0; i--) {
+        const idx = arr2.indexOf(arr1[i]);
+        if (idx !== -1) {
+          arr1.splice(i, 1);
+          arr2.splice(idx, 1);
+        }
+      }
+
+      const remaining = arr1.length + arr2.length;
+      const flames = ['F', 'L', 'A', 'M', 'E', 'S'];
+      let current = [...flames];
+
+      if (remaining === 0) return 'S';
+
+      let index = 0;
+      while (current.length > 1) {
+        index = (index + remaining - 1) % current.length;
+        current.splice(index, 1);
+        if (index >= current.length) index = 0;
+      }
+
+      return current[0];
+    }
+
+    function generateResults(name1, name2) {
+      const percent = Math.floor(Math.random() * 31) + 65;
+      const flamesKey = calculateFLAMES(name1, name2);
+      const flames = flamesData[flamesKey];
+      const explIdx = Math.floor(Math.random() * percentExplanations.length);
+      const flamesDescIdx = Math.floor(Math.random() * flames.descs.length);
+
+      const mash = {
+        home: mashOptions.home[Math.floor(Math.random() * mashOptions.home.length)],
+        job: mashOptions.job[Math.floor(Math.random() * mashOptions.job.length)],
+        transport: mashOptions.transport[Math.floor(Math.random() * mashOptions.transport.length)],
+        pet: mashOptions.pet[Math.floor(Math.random() * mashOptions.pet.length)]
+      };
+
+      const readings = [
+        `According to the ancient art of LoveLogic AI, ${name1} and ${name2} scored a sizzling ${percent}% compatibility! The FLAMES oracle declares them "${flames.label.replace(/[^\w\s]/g, '').trim()}" — which honestly tracks, given the vibes. In their future? They'll be living in a ${mash.home.split(' ')[0]}, with ${name1} thriving as a ${mash.job.split(' ')[0]} while cruising around in their ${mash.transport.split(' ')[0].toLowerCase()}${mash.transport.split(' ')[1] || ''} with their beloved ${mash.pet.split(' ')[0].toLowerCase()} by their side. College may end, but this love story? It's just getting started! 💫`,
+        `Breaking news from the Love Laboratory! ${name1} and ${name2} have achieved a legendary ${percent}% love score. FLAMES analysis confirms: "${flames.label.replace(/[^\w\s]/g, '').trim()}" status unlocked! The MASH prophecy reveals a life in a ${mash.home.split(' ')[0]}, a career path as a ${mash.job.split(' ')[0]}, getting around by ${mash.transport.split(' ')[0].toLowerCase()}, and sharing life with a ${mash.pet.split(' ')[0].toLowerCase()}. If this were a college course, they'd both get an A+ in Love 101! 🎓💕`,
+        `The cosmic love algorithm has spoken! ${name1} and ${name2} radiate ${percent}% pure compatibility energy. Their FLAMES destiny? "${flames.label.replace(/[^\w\s]/g, '').trim()}" — and the universe is NOT surprised. MASH predicts they'll be living large in a ${mash.home.split(' ')[0]}, absolutely crushing it as a ${mash.job.split(' ')[0]}, traveling by ${mash.transport.split(' ')[0].toLowerCase()}, and adopting a ${mash.pet.split(' ')[0].toLowerCase()}. This is the kind of story they'll tell at reunions for years to come! 🌟`
+      ];
+
+      const readingIdx = Math.floor(Math.random() * readings.length);
+
+      return {
+        percent,
+        percentExplanation: percentExplanations[explIdx](name1, name2),
+        flamesLabel: flames.label,
+        flamesDesc: flames.descs[flamesDescIdx](name1, name2),
+        mash,
+        loveReading: readings[readingIdx]
+      };
+    }
+
+    // ============= FLOATING HEARTS =============
+    function createFloatingHearts() {
+      const container = document.getElementById('floating-hearts');
+      container.innerHTML = '';
+      const hearts = ['💕', '💗', '💖', '💘', '✨', '💝', '♥'];
+      for (let i = 0; i < 15; i++) {
+        const heart = document.createElement('div');
+        heart.textContent = hearts[Math.floor(Math.random() * hearts.length)];
+        heart.style.cssText = `
+          position: absolute;
+          font-size: ${10 + Math.random() * 16}px;
+          left: ${Math.random() * 100}%;
+          top: ${Math.random() * 100}%;
+          opacity: ${0.1 + Math.random() * 0.15};
+          animation: float ${3 + Math.random() * 4}s ease-in-out infinite;
+          animation-delay: ${Math.random() * 3}s;
+        `;
+        container.appendChild(heart);
+      }
+    }
+
+    // ============= CONFETTI =============
+    function spawnConfetti() {
+      const container = document.getElementById('results-screen');
+      const colors = ['#ff4757', '#ff6b81', '#ffd700', '#ff9ff3', '#ffeef0', '#ff3838'];
+      for (let i = 0; i < 30; i++) {
+        const piece = document.createElement('div');
+        piece.className = 'confetti-piece';
+        piece.style.cssText = `
+          left: ${Math.random() * 100}%;
+          top: -10px;
+          background: ${colors[Math.floor(Math.random() * colors.length)]};
+          animation-delay: ${Math.random() * 1}s;
+          animation-duration: ${1.5 + Math.random() * 1.5}s;
+          width: ${4 + Math.random() * 6}px;
+          height: ${4 + Math.random() * 6}px;
+          border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+        `;
+        container.appendChild(piece);
+        setTimeout(() => piece.remove(), 3500);
+      }
+    }
+
+    // ============= UI LOGIC =============
+    let currentResults = null;
+    let currentName1 = '';
+    let currentName2 = '';
+
+    const form = document.getElementById('love-form');
+    const inputScreen = document.getElementById('input-screen');
+    const resultsScreen = document.getElementById('results-screen');
+    const certSection = document.getElementById('certificate-section');
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const n1 = document.getElementById('name1').value.trim();
+      const n2 = document.getElementById('name2').value.trim();
+      if (!n1 || !n2) return;
+
+      currentName1 = n1;
+      currentName2 = n2;
+      currentResults = generateResults(n1, n2);
+      showResults();
+    });
+
+    function showResults() {
+      const r = currentResults;
+
+      document.getElementById('result-names').textContent = `${currentName1} & ${currentName2}`;
+      document.getElementById('love-percent').textContent = r.percent;
+      document.getElementById('percent-bar').style.width = r.percent + '%';
+      document.getElementById('percent-explanation').textContent = r.percentExplanation;
+      document.getElementById('flames-result').textContent = r.flamesLabel;
+      document.getElementById('flames-desc').textContent = r.flamesDesc;
+      document.getElementById('mash-home').textContent = r.mash.home;
+      document.getElementById('mash-job').textContent = r.mash.job;
+      document.getElementById('mash-transport').textContent = r.mash.transport;
+      document.getElementById('mash-pet').textContent = r.mash.pet;
+      document.getElementById('love-reading').textContent = r.loveReading;
+
+      // Update certificate
+      const config = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      document.getElementById('cert-names').textContent = `${currentName1}  ❤️  ${currentName2}`;
+      document.getElementById('cert-percent').textContent = r.percent + '%';
+      document.getElementById('cert-flames').textContent = r.flamesLabel;
+      document.getElementById('cert-mash').innerHTML = `${r.mash.home}<br>${r.mash.job}<br>${r.mash.transport}<br>${r.mash.pet}`;
+      document.getElementById('cert-reading').textContent = r.loveReading;
+      document.getElementById('cert-date').textContent = config.certificate_date || defaultConfig.certificate_date;
+      document.getElementById('cert-footer-org').textContent = 'Certified by ' + (config.footer_org || defaultConfig.footer_org);
+      document.getElementById('cert-footer-event').textContent = config.footer_event || defaultConfig.footer_event;
+
+      // Set generated date
+      const now = new Date();
+      const formattedDate = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      document.getElementById('cert-generated-date').textContent = formattedDate;
+
+      inputScreen.classList.add('hidden');
+      resultsScreen.classList.remove('hidden');
+
+      setTimeout(() => spawnConfetti(), 300);
+    }
+
+    function goBack() {
+      resultsScreen.classList.add('hidden');
+      certSection.classList.add('hidden');
+      inputScreen.classList.remove('hidden');
+      document.getElementById('name1').value = '';
+      document.getElementById('name2').value = '';
+    }
+
+    document.getElementById('back-btn').addEventListener('click', goBack);
+    document.getElementById('new-calc-btn').addEventListener('click', goBack);
+
+    document.getElementById('print-btn').addEventListener('click', function() {
+      resultsScreen.classList.add('hidden');
+      certSection.style.display = 'block';
+      setTimeout(() => window.print(), 300);
+    });
+
+    // Add button to go back from certificate view
+    const certificateSection = document.getElementById('certificate-section');
+    const backFromCertBtn = document.createElement('button');
+    backFromCertBtn.innerHTML = '← Back to Results';
+    backFromCertBtn.className = 'text-love-pink hover:text-white transition-colors text-sm font-semibold flex items-center gap-2 mb-4';
+    backFromCertBtn.style.cssText = 'position: absolute; top: 20px; left: 20px; z-index: 100;';
+    backFromCertBtn.addEventListener('click', () => {
+      certSection.style.display = 'none';
+      resultsScreen.classList.remove('hidden');
+    });
+    certificateSection.insertBefore(backFromCertBtn, certificateSection.firstChild);
+
+    // ============= ELEMENT SDK =============
+    function applyConfig(config) {
+      const bg = config.background_color || defaultConfig.background_color;
+      const surface = config.surface_color || defaultConfig.surface_color;
+      const textC = config.text_color || defaultConfig.text_color;
+      const primaryAction = config.primary_action_color || defaultConfig.primary_action_color;
+      const secondaryAction = config.secondary_action_color || defaultConfig.secondary_action_color;
+      const fontFamily = config.font_family || defaultConfig.font_family;
+      const fontSize = config.font_size || defaultConfig.font_size;
+      const mainTitle = config.main_title || defaultConfig.main_title;
+      const subtitleText = config.subtitle_text || defaultConfig.subtitle_text;
+      const footerOrg = config.footer_org || defaultConfig.footer_org;
+      const footerEvent = config.footer_event || defaultConfig.footer_event;
+      const certDate = config.certificate_date || defaultConfig.certificate_date;
+
+      // Background
+      const wrapper = document.getElementById('app-wrapper');
+      wrapper.style.background = `linear-gradient(135deg, ${bg} 0%, ${adjustColor(bg, 20)} 50%, ${bg} 100%)`;
+
+      // Surface color (buttons, accents)
+      document.querySelectorAll('.btn-love').forEach(btn => {
+        btn.style.background = `linear-gradient(135deg, ${surface}, ${primaryAction})`;
+      });
+
+      // Text color
+      document.querySelectorAll('.text-love-light').forEach(el => {
+        el.style.color = textC;
+      });
+
+      // Secondary action (gold accents)
+      document.querySelectorAll('.text-love-gold').forEach(el => {
+        el.style.color = secondaryAction;
+      });
+
+      // Surface color for pink text
+      document.querySelectorAll('.text-love-pink').forEach(el => {
+        el.style.color = surface;
+      });
+
+      // Font
+      const baseFontStack = 'Arial, sans-serif';
+      document.body.style.fontFamily = `${fontFamily}, ${baseFontStack}`;
+
+      // Font Size
+      const labels = document.querySelectorAll('label');
+      labels.forEach(l => l.style.fontSize = `${fontSize * 0.85}px`);
+
+      const inputs = document.querySelectorAll('.input-love');
+      inputs.forEach(inp => inp.style.fontSize = `${fontSize}px`);
+
+      // Title and subtitle text
+      const titleEl = document.getElementById('main-title');
+      if (titleEl) {
+        titleEl.textContent = mainTitle;
+        titleEl.style.fontFamily = `'Playfair Display', ${fontFamily}, serif`;
+        titleEl.style.fontSize = `${fontSize * 2.2}px`;
+      }
+
+      const subEl = document.getElementById('subtitle-text');
+      if (subEl) {
+        subEl.textContent = subtitleText;
+        subEl.style.fontSize = `${fontSize * 0.8}px`;
+        subEl.style.color = surface;
+      }
+
+      // Certificate updates
+      document.getElementById('cert-date').textContent = certDate;
+      document.getElementById('cert-footer-org').textContent = 'Certified by ' + footerOrg;
+      document.getElementById('cert-footer-event').textContent = footerEvent;
+
+      // Result card headings
+      document.querySelectorAll('.result-card h3').forEach(h => {
+        h.style.fontFamily = `'Playfair Display', ${fontFamily}, serif`;
+        h.style.fontSize = `${fontSize * 1.15}px`;
+        h.style.color = secondaryAction;
+      });
+
+      // Result card text
+      document.querySelectorAll('.result-card p:not(h3)').forEach(p => {
+        if (!p.classList.contains('text-love-pink') && !p.classList.contains('text-love-gold')) {
+          p.style.fontSize = `${fontSize * 0.9}px`;
+        }
+      });
+    }
+
+    function adjustColor(hex, amount) {
+      hex = hex.replace('#', '');
+      const num = parseInt(hex, 16);
+      let r = Math.min(255, ((num >> 16) & 0xFF) + amount);
+      let g = Math.min(255, ((num >> 8) & 0xFF) + amount);
+      let b = Math.min(255, (num & 0xFF) + amount);
+      return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
+    }
+
+    // Initialize
+    createFloatingHearts();
+
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange: async (config) => {
+          applyConfig(config);
+        },
+        mapToCapabilities: (config) => ({
+          recolorables: [
+            {
+              get: () => config.background_color || defaultConfig.background_color,
+              set: (v) => { config.background_color = v; window.elementSdk.setConfig({ background_color: v }); }
+            },
+            {
+              get: () => config.surface_color || defaultConfig.surface_color,
+              set: (v) => { config.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); }
+            },
+            {
+              get: () => config.text_color || defaultConfig.text_color,
+              set: (v) => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); }
+            },
+            {
+              get: () => config.primary_action_color || defaultConfig.primary_action_color,
+              set: (v) => { config.primary_action_color = v; window.elementSdk.setConfig({ primary_action_color: v }); }
+            },
+            {
+              get: () => config.secondary_action_color || defaultConfig.secondary_action_color,
+              set: (v) => { config.secondary_action_color = v; window.elementSdk.setConfig({ secondary_action_color: v }); }
+            }
+          ],
+          borderables: [],
+          fontEditable: {
+            get: () => config.font_family || defaultConfig.font_family,
+            set: (v) => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); }
+          },
+          fontSizeable: {
+            get: () => config.font_size || defaultConfig.font_size,
+            set: (v) => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); }
+          }
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ['main_title', config.main_title || defaultConfig.main_title],
+          ['subtitle_text', config.subtitle_text || defaultConfig.subtitle_text],
+          ['footer_org', config.footer_org || defaultConfig.footer_org],
+          ['footer_event', config.footer_event || defaultConfig.footer_event],
+          ['certificate_date', config.certificate_date || defaultConfig.certificate_date]
+        ])
+      });
+    } else {
+      applyConfig(defaultConfig);
+    }
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9cb3630eb2c39d04',t:'MTc3MDY0MDMyMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
